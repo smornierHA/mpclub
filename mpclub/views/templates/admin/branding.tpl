@@ -1,0 +1,1 @@
+<div class='panel'><div style='display:flex;align-items:center;gap:10px;'><img src='{$urls.base_url}modules/mpclub/logo.png' alt='MS consulting' style='width:32px;height:32px;border-radius:4px;'><div><strong>Club Maison Perrotte — v1.2.2</strong><br><small>Développé par <b>MS consulting</b></small></div></div></div>

@@ -1,0 +1,1 @@
+<li><a href="{$link->getModuleLink('mpclub','account')|escape:'htmlall':'UTF-8'}" rel="nofollow">{l s='Mon Club' d='Modules.Mpclub.Shop'}</a></li>

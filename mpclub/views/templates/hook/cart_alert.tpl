@@ -1,0 +1,1 @@
+<div class='alert alert-success' role='alert'>{$mpclub_alert|escape:'htmlall':'UTF-8'}</div>
