@@ -4,6 +4,7 @@ class MpClubMembership extends ObjectModel
 {
     public $id_mpclub_membership; public $id_customer; public $level; public $date_start; public $date_end; public $active;
     public $id_order; public $id_product; public $id_cart_rule_ongoing; public $id_cart_rule_welcome; public $last_birthday_probe; public $last_renewal_probe; public $date_add; public $date_upd;
+
     public static $definition = array('table'=>'mpclub_membership','primary'=>'id_mpclub_membership','fields'=>array(
         'id_customer'=>array('type'=>self::TYPE_INT,'required'=>true),
         'level'=>array('type'=>self::TYPE_STRING,'required'=>true,'size'=>16),
@@ -15,6 +16,12 @@ class MpClubMembership extends ObjectModel
         'last_birthday_probe'=>array('type'=>self::TYPE_DATE),'last_renewal_probe'=>array('type'=>self::TYPE_DATE),
         'date_add'=>array('type'=>self::TYPE_DATE),'date_upd'=>array('type'=>self::TYPE_DATE),
     ));
-    public static function loadByCustomer($idCustomer){ $id=(int)Db::getInstance()->getValue('SELECT id_mpclub_membership FROM `'._DB_PREFIX_.'mpclub_membership` WHERE id_customer='.(int)$idCustomer); return $id?new self($id):null; }
-    public static function deleteByCustomer($idCustomer){ return Db::getInstance()->execute('DELETE FROM `'._DB_PREFIX_.'mpclub_membership` WHERE id_customer='.(int)$idCustomer); }
+
+    public static function loadByCustomer($idCustomer){
+        $id=(int)Db::getInstance()->getValue('SELECT id_mpclub_membership FROM `'._DB_PREFIX_.'mpclub_membership` WHERE id_customer='.(int)$idCustomer);
+        return $id?new self($id):null;
+    }
+    public static function deleteByCustomer($idCustomer){
+        return Db::getInstance()->execute('DELETE FROM `'._DB_PREFIX_.'mpclub_membership` WHERE id_customer='.(int)$idCustomer);
+    }
 }
