@@ -9,9 +9,7 @@ class MpclubClubModuleFrontController extends ModuleFrontController
     public function init()
     {
         parent::init();
-        if ((int)Tools::getValue('ajax') === 1) {
-            $this->ajax = true;
-        }
+        if ((int)Tools::getValue('ajax') === 1) { $this->ajax = true; }
     }
 
     public function initContent()
@@ -26,7 +24,8 @@ class MpclubClubModuleFrontController extends ModuleFrontController
             return;
         }
 
-        die('Club Maison Perrotte');
+        $this->context->smarty->assign($this->module->getLandingVars());
+        $this->setTemplate('module:mpclub/views/templates/front/landing.tpl');
     }
 
     public function displayAjaxSubscribe()
@@ -37,52 +36,49 @@ class MpclubClubModuleFrontController extends ModuleFrontController
     private function processSubscribe($isAjax)
     {
         $ctx = $this->context;
-
         if (!$ctx->customer->isLogged()) {
             $payload = ['success' => false, 'redirect' => $ctx->link->getPageLink('my-account', true)];
             return $isAjax ? $this->ajaxDie(json_encode($payload)) : null;
         }
 
         $level = Tools::strtolower(Tools::getValue('level'));
-        $map = ['silver'=>'MPC_PRODUCT_SILVER','gold'=>'MPC_PRODUCT_GOLD','platinum'=>'MPC_PRODUCT_PLATINUM'];
-        if (!isset($map[$level])) {
-            return $isAjax ? $this->ajaxDie(json_encode(['success'=>false,'message'=>'Niveau invalide'])) : null;
-        }
-
-        $idProduct = (int)Configuration::get($map[$level], null, null, (int)$ctx->shop->id);
+        $map = array(
+            'silver'   => (int)Configuration::get('MPC_PRODUCT_SILVER', null, null, (int)$ctx->shop->id),
+            'gold'     => (int)Configuration::get('MPC_PRODUCT_GOLD', null, null, (int)$ctx->shop->id),
+            'platinum' => (int)Configuration::get('MPC_PRODUCT_PLATINUM', null, null, (int)$ctx->shop->id),
+        );
+        $idProduct = isset($map[$level]) ? (int)$map[$level] : 0;
         if (!$idProduct) {
-            return $isAjax ? $this->ajaxDie(json_encode(['success'=>false,'message'=>'Produit introuvable'])) : null;
+            $payload = ['success' => false, 'message' => 'Produit de formule introuvable.'];
+            return $isAjax ? $this->ajaxDie(json_encode($payload)) : null;
         }
 
-        if (!$ctx->cart->id) {
-            $cart = new Cart();
-            $cart->id_customer = (int)$ctx->customer->id;
-            $cart->id_lang     = (int)$ctx->language->id;
-            $cart->id_currency = (int)$ctx->currency->id;
-            $cart->id_shop     = (int)$ctx->shop->id;
-            $cart->save();
-            $ctx->cart = $cart;
-            $ctx->cookie->id_cart = (int)$cart->id;
-        }
+        if (!$ctx->cart->id) { $this->createEmptyCart(); }
 
-        // 1 formule max, quantité 1
         $this->module->sanitizeMembershipInCart($ctx->cart);
-        $ok = $ctx->cart->updateQty(1, $idProduct);
+        $added = $ctx->cart->updateQty(1, $idProduct);
 
-        // avantages immédiats (réduc + port gratuit)
         MpClubRuleService::ensureImmediateRule($ctx->customer, $level, (int)$ctx->shop->id, $ctx->cart);
-        CartRule::autoAddToCart($ctx); // IMPORTANT: passer le Context, pas un Cart
+        CartRule::autoAddToCart($ctx); // ✅ CONTEXT
 
         if ($isAjax) {
             $presenter = new CartPresenter(new PriceFormatter());
+            $presentedCart = $presenter->present($ctx->cart);
             $payload = [
-                'success'              => (bool)$ok,
-                'id_product'           => (int)$idProduct,
+                'success' => (bool)$added,
+                'id_product' => (int)$idProduct,
                 'id_product_attribute' => 0,
-                'cart'                 => $presenter->present($ctx->cart),
-                'message'              => $ok ? 'Formule ajoutée à votre panier.' : 'Impossible d’ajouter la formule.',
+                'cart' => $presentedCart,
+                'message' => $added ? $this->module->l('Formule ajoutée à votre panier.') : $this->module->l('Impossible d’ajouter la formule.'),
             ];
             return $this->ajaxDie(json_encode($payload));
         }
+    }
+
+    private function createEmptyCart()
+    {
+        $c=$this->context; $cart=new Cart();
+        $cart->id_customer=(int)$c->customer->id; $cart->id_lang=(int)$c->language->id; $cart->id_currency=(int)$c->currency->id; $cart->id_shop=(int)$c->shop->id;
+        $cart->save(); $c->cart=$cart; $c->cookie->id_cart=(int)$cart->id;
     }
 }
