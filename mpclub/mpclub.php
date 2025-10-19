@@ -19,7 +19,7 @@ class Mpclub extends Module
     {
         $this->name = 'mpclub';
         $this->tab = 'front_office_features';
-        $this->version = '1.2.2';
+        $this->version = '1.4.0';
         $this->author = 'MS consulting';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = array('min' => '1.7.6.0', 'max' => _PS_VERSION_);
@@ -107,6 +107,16 @@ class Mpclub extends Module
         Db::getInstance()->execute($sql1);
         Db::getInstance()->execute($sql2);
     }
+
+    public function hookHeader()
+    {
+        $this->context->controller->registerJavascript(
+            'module-mpclub',
+            'modules/'.$this->name.'/views/js/mpclub.js',
+            ['position' => 'bottom', 'priority' => 150]
+        );
+    }
+
 
     public function hookModuleRoutes($params)
     {
