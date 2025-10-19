@@ -5,7 +5,7 @@ class MpClubRuleService
 {
     public static function ensureImmediateRule(Customer $c, $level, $idShop, Cart $cart = null)
     {
-        $percent=(float)Configuration::get('MPC_PERCENT_'.Tools::strtoupper($level));
+        $percent = self::getPercentForLevel($level);
         $free=(int)Configuration::get('MPC_FREE_SHIPPING');
         $end=(new DateTime())->modify('+1 day');
 
@@ -151,5 +151,18 @@ class MpClubRuleService
         $cr->priority=0;
         $cr->add();
         return (int)$cr->id;
+    }
+    private static function getPercentForLevel($level)
+    {
+        $keys = [
+            'MPC_PERCENT_'.Tools::strtoupper($level),
+            'MPC_DISCOUNT_'.Tools::strtoupper($level),
+            'MPCLUB_DISCOUNT_'.Tools::strtoupper($level),
+        ];
+        foreach ($keys as $k) {
+            $v = Configuration::get($k);
+            if ($v !== false && $v !== null) return (float)$v;
+        }
+        return 0.0;
     }
 }
