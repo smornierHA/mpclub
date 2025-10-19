@@ -1,0 +1,28 @@
+name: Build PrestaShop ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # On fabrique un ZIP avec un dossier top-level 'mpclub/' (format attendu par PrestaShop)
+      - name: Package module
+        run: |
+          mkdir -p package/mpclub
+          rsync -a --exclude ".git" --exclude ".github" ./ package/mpclub/
+          cd package
+          zip -r "mpclub_${GITHUB_REF_NAME}.zip" mpclub
+
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: package/mpclub_${{ github.ref_name }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
